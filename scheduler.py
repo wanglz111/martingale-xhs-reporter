@@ -30,7 +30,7 @@ def run_once(state_file: str) -> int:
 def main(argv: Sequence[str]) -> int:
     parser = argparse.ArgumentParser(description="Loop runner for xhs_summary.")
     parser.add_argument("--state-file", required=True, help="Path to state.runtime.yaml")
-    parser.add_argument("--hour", type=int, default=17, help="UTC hour to run daily (default 17)")
+    parser.add_argument("--hour", type=int, default=2, help="UTC hour to run daily (default 2 = 10:00 Beijing)")
     args = parser.parse_args(argv)
 
     # immediate run
