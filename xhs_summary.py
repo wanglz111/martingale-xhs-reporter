@@ -193,14 +193,14 @@ def send_bark(conf: dict, title: str, body: str, url: Optional[str] = None, extr
         print("[warn] Bark config missing key; skip notify.", file=sys.stderr)
         return
     body_with_links = body
-    if extra_urls:
-        body_with_links += "\n" + "\n".join(extra_urls)
+    # if extra_urls:
+    #     body_with_links += "\n" + "\n".join(extra_urls)
     payload = {"title": title, "body": body_with_links}
-    if url:
-        payload["url"] = url
+    # if url:
+    #     payload["url"] = url
     try:
-        # resp = requests.post(f"{server}/push", json={"device_key": key, **payload}, timeout=10)
-        # resp.raise_for_status()
+        resp = requests.post(f"{server}/push", json={"device_key": key, **payload}, timeout=10)
+        resp.raise_for_status()
         print("[info] Bark notification sent.", file=sys.stderr)
     except Exception as exc:  # noqa: BLE001
         print(f"[warn] Failed to send Bark notification: {exc}", file=sys.stderr)
