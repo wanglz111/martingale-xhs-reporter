@@ -16,13 +16,13 @@ services:
     env_file:
       - .env
       - ./secrets.env
-    command: >
-      /bin/sh -c "
-        crontab - <<'EOF'
+    command: |
+      /bin/sh -c '
+        crontab - <<EOF
 0 17 * * * /app/docker-entrypoint.sh
 EOF
         crond -f
-      "
+      '
     volumes:
       - .:/app
     restart: unless-stopped
