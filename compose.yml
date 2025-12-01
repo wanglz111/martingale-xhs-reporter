@@ -18,10 +18,15 @@ services:
       - ./secrets.env
     command: |
       /bin/sh -c '
-        crontab - <<EOF
-0 17 * * * /app/docker-entrypoint.sh
-EOF
-        crond -f
+        while true; do
+          now=$(date -u +%s)
+          target=$(date -u -d "today 17:00" +%s)
+          if [ "$now" -ge "$target" ]; then
+            target=$(date -u -d "tomorrow 17:00" +%s)
+          fi
+          sleep $(( target - now ))
+          /app/docker-entrypoint.sh
+        done
       '
     volumes:
       - .:/app
