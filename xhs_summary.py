@@ -285,16 +285,25 @@ def main(argv: Sequence[str]) -> int:
     market_block = build_market_block(args.symbols, args.hours, args.interval)
     prompt = build_prompt(snapshot_text, market_block)
 
+    state = None
+    if not (args.no_upload and args.no_notify):
+        state = load_state(args.state_file)
+    bark_conf = state.get("notify", {}).get("bark") if state else None
+
     if args.dry_run:
         print(prompt)
         return 0
 
-    content = call_openrouter(args.api_key, args.model, prompt)
-    print(content.strip())
+    try:
+        content = call_openrouter(args.api_key, args.model, prompt)
+    except Exception as exc:  # noqa: BLE001
+        msg = f"OpenRouter 调用失败: {exc}"
+        print(f"[warn] {msg}", file=sys.stderr)
+        if bark_conf and not args.no_notify:
+            send_bark(bark_conf, title=f"XHS摘要失败 {args.date}", body=msg)
+        return 1
 
-    state = None
-    if not (args.no_upload and args.no_notify):
-        state = load_state(args.state_file)
+    print(content.strip())
 
     upload_url = None
     state_conf = state.get("state") if state else None
@@ -302,11 +311,10 @@ def main(argv: Sequence[str]) -> int:
         key = f"xhs/xhs_summary_{format_date_dash(args.date)}.txt"
         upload_url = upload_to_r2(state_conf, key, content)
 
-    bark_conf = state.get("notify", {}).get("bark") if state else None
     if bark_conf and not args.no_notify:
         preview = content.strip()
-        if len(preview) > 200:
-            preview = preview[:200] + "..."
+        # if len(preview) > 200:
+        #     preview = preview[:200] + "..."
         extra_urls = build_image_links(args.date)
         send_bark(
             bark_conf,
