@@ -1,0 +1,48 @@
+version: "3.9"
+
+services:
+  xhs-reporter:
+    restart: "no"
+    # 如果使用 systemd/cron 调度，请保持 restart: no
+    # 如需依靠 Docker 内置 cron，可改用外部调度或手动运行下方 cron 容器
+    image: python:3.12-slim
+    working_dir: /app
+    volumes:
+      - .:/app
+    env_file:
+      - .env           # OPENROUTER_API_KEY 等
+      - ./secrets.env  # R2/Bark 密钥等
+    command: >
+      /bin/sh -c "
+        pip install --no-cache-dir -r requirements.txt &&
+        cat > /app/state.runtime.yaml <<'EOF'
+        state:
+          bucket: ${STATE_BUCKET}
+          endpoint_url: \"${STATE_ENDPOINT_URL}\"
+          access_key: \"${STATE_ACCESS_KEY}\"
+          secret_key: \"${STATE_SECRET_KEY}\"
+          region: ${STATE_REGION:-auto}
+        notify:
+          bark:
+            server: ${BARK_SERVER:-https://api.day.app}
+            key: \"${BARK_KEY}\"
+        EOF
+        python xhs_summary.py --state-file /app/state.runtime.yaml
+      "
+    environment:
+      # 可覆盖默认日期，例如 20251201；不写则默认当天 UTC
+      # RUN_DATE: "20251201"
+
+  xhs-reporter-cron:
+    image: python:3.12-slim
+    working_dir: /app
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+      - ./secrets.env
+    command: >
+      /bin/sh -c "
+        printf '0 17 * * * cd /app && pip install --no-cache-dir -r requirements.txt && cat > /app/state.runtime.yaml <<'\"'\"'EOF'\"'\"'\nstate:\n  bucket: ${STATE_BUCKET}\n  endpoint_url: \"${STATE_ENDPOINT_URL}\"\n  access_key: \"${STATE_ACCESS_KEY}\"\n  secret_key: \"${STATE_SECRET_KEY}\"\n  region: ${STATE_REGION:-auto}\nnotify:\n  bark:\n    server: ${BARK_SERVER:-https://api.day.app}\n    key: \"${BARK_KEY}\"\nEOF\npython xhs_summary.py --state-file /app/state.runtime.yaml\n' | crontab - && crond -f
+      "
+    restart: unless-stopped
