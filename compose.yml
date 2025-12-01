@@ -18,7 +18,7 @@ services:
       - ./secrets.env
     command: >
       /bin/sh -c "
-        printf '0 17 * * * /app/docker-entrypoint.sh\n' | crontab - && crond -f
+        printf '0 17 * * * /app/docker-entrypoint.sh\n\n' | crontab - && crond -f
       "
     volumes:
       - .:/app
