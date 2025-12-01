@@ -3,9 +3,12 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-# System deps (none heavy), then install python deps
+# System deps (cron) and Python deps
 COPY requirements.txt ./
-RUN pip install --no-cache-dir -r requirements.txt
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends cron \
+    && pip install --no-cache-dir -r requirements.txt \
+    && rm -rf /var/lib/apt/lists/*
 
 # Copy source (state/secrets are mounted at runtime)
 COPY analyze.py xhs_summary.py README.md docker-entrypoint.sh ./ 
