@@ -18,6 +18,9 @@ services:
       - ./secrets.env
     command: |
       /bin/sh -c '
+        # run once immediately
+        /app/docker-entrypoint.sh;
+        # then schedule daily at 17:00 UTC
         while true; do
           now=$(date -u +%s)
           target=$(date -u -d "today 17:00" +%s)
