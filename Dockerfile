@@ -6,8 +6,12 @@ WORKDIR /app
 # System deps (cron) and Python deps
 COPY requirements.txt ./
 
+RUN apt-get update \
+    && pip install --no-cache-dir -r requirements.txt \
+    && rm -rf /var/lib/apt/lists/*
+
 # Copy source (state/secrets are mounted at runtime)
-COPY analyze.py xhs_summary.py scheduler.py README.md docker-entrypoint.sh ./ 
+COPY analyze.py xhs_summary.py scheduler.py README.md docker-entrypoint.sh ./
 RUN chmod +x /app/docker-entrypoint.sh
 RUN sed -i 's/\r$//' /app/docker-entrypoint.sh
 
