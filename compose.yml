@@ -23,9 +23,15 @@ services:
         # then schedule daily at 17:00 UTC
         while true; do
           now=$(date -u +%s)
-          target=$(date -u -d "today 17:00" +%s)
+          target=$(date -u -d "today 17:00" +%s 2>/dev/null)
+          if [ -z "$target" ]; then
+            target=$(( now + 86400 ))
+          fi
           if [ "$now" -ge "$target" ]; then
-            target=$(date -u -d "tomorrow 17:00" +%s)
+            target=$(date -u -d "tomorrow 17:00" +%s 2>/dev/null)
+            if [ -z "$target" ]; then
+              target=$(( now + 86400 ))
+            fi
           fi
           sleep $(( target - now ))
           /app/docker-entrypoint.sh
