@@ -9,9 +9,6 @@ services:
       - ./secrets.env  # R2/Bark 密钥等
     volumes:
       - .:/app
-    environment:
-      # 可覆盖默认日期，例如 20251201；不写则默认当天 UTC
-      # RUN_DATE: "20251201"
     restart: "no"
 
   xhs-reporter-cron:
