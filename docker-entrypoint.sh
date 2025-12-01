@@ -1,6 +1,16 @@
 #!/bin/sh
 set -e
 
+# Ensure dependencies are present (handles cases where image not rebuilt)
+if ! python - <<'PY' >/dev/null 2>&1
+import requests  # noqa: F401
+import boto3  # noqa: F401
+PY
+then
+  echo "[info] Installing Python dependencies..."
+  pip install --no-cache-dir -r /app/requirements.txt
+fi
+
 STATE_FILE="/app/state.runtime.yaml"
 
 cat > "$STATE_FILE" <<EOF
