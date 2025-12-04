@@ -30,4 +30,4 @@ if [ "$1" = "--loop" ]; then
   exec python scheduler.py --state-file "$STATE_FILE"
 fi
 
-exec python xhs_summary.py --state-file "$STATE_FILE"
+# exec python xhs_summary.py --state-file "$STATE_FILE"
