@@ -1,13 +1,13 @@
 services:
-  xhs-reporter:
-    build: .
-    image: xhs-reporter:latest
-    env_file:
-      - .env           # OPENROUTER_API_KEY 等
-      - ./secrets.env  # R2/Bark 密钥等
-    volumes:
-      - .:/app
-    restart: "no"
+  # xhs-reporter:
+  #   build: .
+  #   image: xhs-reporter:latest
+  #   env_file:
+  #     - .env           # OPENROUTER_API_KEY 等
+  #     - ./secrets.env  # R2/Bark 密钥等
+  #   volumes:
+  #     - .:/app
+  #   restart: "no"
 
   xhs-reporter-cron:
     image: xhs-reporter:latest
