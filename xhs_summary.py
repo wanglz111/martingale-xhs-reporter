@@ -14,6 +14,7 @@ import json
 import os
 import re
 import sys
+import time
 from typing import List, Optional, Sequence
 
 import requests
@@ -149,26 +150,32 @@ def is_free_model(model_data: dict) -> bool:
 
 
 def fetch_free_models() -> list[str]:
-    resp = requests.get(OPENROUTER_MODELS_URL, timeout=15)
-    try:
-        resp.raise_for_status()
-    except requests.HTTPError as exc:
-        raise RuntimeError(f"Failed to fetch OpenRouter models: {exc}") from exc
+    last_exc: Optional[Exception] = None
+    for attempt in range(3):
+        try:
+            resp = requests.get(OPENROUTER_MODELS_URL, timeout=15)
+            resp.raise_for_status()
+            payload = resp.json()
+            models = payload.get("data") or []
+            free_models: list[str] = []
+            seen: set[str] = set()
+            for model in models:
+                if is_free_model(model):
+                    mid = model.get("id")
+                    if mid and mid not in seen:
+                        free_models.append(mid)
+                        seen.add(mid)
 
-    payload = resp.json()
-    models = payload.get("data") or []
-    free_models: list[str] = []
-    seen: set[str] = set()
-    for model in models:
-        if is_free_model(model):
-            mid = model.get("id")
-            if mid and mid not in seen:
-                free_models.append(mid)
-                seen.add(mid)
+            if not free_models:
+                raise RuntimeError("未找到可用的免费模型")
+            return free_models
+        except Exception as exc:  # noqa: BLE001
+            last_exc = exc
+            wait = 2**attempt
+            print(f"[warn] Fetch models failed (attempt {attempt+1}/3): {exc}; retry in {wait}s", file=sys.stderr)
+            time.sleep(wait)
 
-    if not free_models:
-        raise RuntimeError("未找到可用的免费模型")
-    return free_models
+    raise RuntimeError(f"Failed to fetch OpenRouter models after retries: {last_exc}")
 
 
 def call_with_fallback(api_key: str, models: Sequence[str], prompt: str) -> tuple[str, str]:

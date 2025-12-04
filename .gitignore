@@ -18,6 +18,9 @@ state.runtime.yaml
 *.json
 state.yaml
 
+# Local reports
+report_*.txt
+
 # IDE / misc
 .DS_Store
 .idea/
